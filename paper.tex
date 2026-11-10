@@ -3,6 +3,7 @@
 % The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
 
 \usepackage{enumitem}
+\usepackage{url}
 % \usepackage{cite}
 % \usepackage{amsmath,amssymb,amsfonts}
 % \usepackage{algorithmic}
@@ -21,7 +22,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \newcommand{\figref}[1]{Figure~\ref{#1}}
 \newcommand{\secref}[1]{Section~\ref{#1}}
 
-\newcommand{\prot}{\textsc{CardanoPubSub}}
+\newcommand{\system}{\textsc{CardanoPubSub}}
 
 \author{\IEEEauthorblockN{Anonymus Author}
 \IEEEauthorblockA{\textit{Anonymus Department} \\
@@ -39,12 +40,13 @@ anonymous@anonymous.org}
     \input{00-abstract}
     \input{01-introduction}
     \input{02-background}
-    \input{03-system-architecture}
-    \input{04-evaluation}
-    \input{05-related-work}
-    \input{06-conclusions}
+    \input{03-system-model.tex}
+    \input{04-system-architecture}
+    \input{05-evaluation}
+    \input{06-related-work}
+    \input{07-conclusions}
 %    CAUTION: DO NOT INCLUDE THIS IN THE INITIAL SUBMISSION!! ANONYMITY AT RISK!!
-    \input{07-acknowledgments}
+    \input{08-acknowledgments}
 
     \bibliographystyle{IEEEtran}
     \bibliography{./refs}
