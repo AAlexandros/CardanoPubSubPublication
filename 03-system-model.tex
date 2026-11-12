@@ -2,23 +2,23 @@
 \label{sec:system-model}
 
 We consider $N$ nodes that communicate over a routed network using each peer's advertised host and port.
-Each node has a persistent Ed25519 key pair. Its public key determines its node identifier and is used to authenticate peer connections and sign events.
+Each node has a persistent Ed25519 key pair.
+Its public key determines its node identifier and is used to authenticate peer connections and sign events.
 
 Cardano operations, including topic administration, are authorized separately by Ed25519 Cardano payment keys. 
 Replication nodes, also use their Cardano payment keys to authenticate internal requests.
 
-We designed, and implemented our pub/sub architecture following definition in \cite{FacesOfPubSub}. 
+We designed, and implemented our pub/sub architecture following definition in~\cite{FacesOfPubSub}.
 Specifically, we make sure our infrastructure provides mechanisms that facilitate event exchange between the 
 publishers and subscribers, enabling decoupling along the three dimensions:
 
 \begin{itemize}
     \item \textbf{Time decoupling: }Publishers and subscribers do not need to be online simultaneously.
-    \item \textbf{Space decoupling: }Publishers do not need to know the network addresses of subscribers to disseminate 
-events. Specifically, publishers are unaware of the number of subscribers involved in the interaction and do 
+    \item \textbf{Space decoupling: }Publishers do not need to know the network addresses of subscribers to disseminate events.
+    Specifically, publishers are unaware of the number of subscribers involved in the interaction and do
 not require direct references to them.
-    \item \textbf{Synchronization decoupling: }A publisher does not need to wait for the subscriber to respond in order to 
-continue its workflow. Specifically, the production and consumption of events do not happen in the main flow 
-of control of the publishers and subscribers and do not, therefore, happen synchronously.
+    \item \textbf{Synchronization decoupling: }A publisher does not need to wait for the subscriber to respond in order to continue its workflow.
+    Specifically, the production and consumption of events do not happen in the main flow of control of the publishers and subscribers and do not, therefore, happen synchronously.
 \end{itemize}
 
 In addition to the aforementioned scope, our system architecture handles the following requirements:
@@ -29,6 +29,7 @@ In addition to the aforementioned scope, our system architecture handles the fol
     \item \textbf{Reliability: }Subscriber should not miss any event from the topics they participate, and no events should be lost once published.
     \item \textbf{Scalability: }A big, but bounded number of subscribers and topics is anticipated.
     \item \textbf{Authorization and Access Control: }Administrative operations, such as assigning publishers or modifying topic parameters, must be restricted to topic owners
-    or authorized administrators. Event publication must be restricted to authorized publisher
+    or authorized administrators.
+    Event publication must be restricted to authorized publisher
     % \item \textbf{Confidentiality: }Restricting the subscriber set for a specific topic should be available.
 \end{itemize}
