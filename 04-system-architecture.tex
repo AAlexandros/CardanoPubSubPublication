@@ -1,17 +1,17 @@
 \section{System Architecture}
 \label{sec:system-architecture}
 
-On a very high level, \system can be viewed as a three component system:
+On a high level, \system can be viewed as a three component system:
 
 \begin{itemize}
     \item \textbf{A network of pub/sub nodes, }clustered into efficient overlays, one per topic, for topic-based event dissemination.
-    Small overlays, with efficient routing paths satisfy the \emph{high dissemination speed} requirement.
-    \item \textbf{A network of replication servers, }tightly connected to each other to facilitate rapid event retrieval and
-    prompt maintenance.
-    This component is responsible for \emph{event persistence}, and \emph{reliability} allowing nodes to retrieve lost events at any time.
-    \item \textbf{Two Cardano smart contracts. }To facilitate authentication and access control for both networks in a decentralized fashion,
-    we introduce a blockchain component, in the form of two smart contracts.
-    The first serves as a global Topic Registry, maintaining topic configurations and enforcing administrative permissions, thereby satisfying the \emph{authorization and access control} requirement.
+    This component is responsible for topic discovery and fast event dissemination, satisfying the \emph{dissemination speed} and \emph{scalability} requirements.
+    \item \textbf{A network of replication servers, }forming a strongly-connected overlay to facilitate rapid event retrieval and
+    prompt replica maintenance.
+    This component is responsible for \emph{event persistence}, and \emph{reliability} allowing nodes to retrieve missed events within their retention period.
+    \item \textbf{Two Cardano blockchain, }providing a decentralized mechanism for administration and access control through
+    two smart contracts, implemented using Aiken validators.
+    The first serves as a global Topic Registry, maintaining topic configurations and enforcing administrative permissions.
     The second manages the registration and membership of replication servers.
 \end{itemize}
 
@@ -34,14 +34,52 @@ Thus, the \emph{scalability} requirement is satisfied.
     \end{minipage}\hfill
 \end{figure}
 
-A pub/sub system encompasses a number of topics, each having its own set of subscribers to which corresponding events should be delivered. 
-Thus, applying the P2P dissemination model in a pub/sub setting entails establishing one individual dissemination overlay per topic, 
-as well as a global network structure combining all these overlays.
-This global network structure should allow a newly joining node that contacts any arbitrary peer in it to easily and reliably discover the individual overlay(s) of the specific topic(s) it wishes to join, and
-should let it participate in event dissemination therein.
+Building the event dissemination overlay is a three-faceted process.
+We address it by deploying three distinct gossiping protocols, organized into three layers: Peer Sampling, Navigation, and Dissemination, depicted as three layers in \figref{fig:dissemination_layers}.
+Each node maintains, separately per layer, a list of links to other nodes, collectively known as its view of the network.
+The three layers operate in a cooperative manner, with lower layers providing links to higher layers to improve their views.
 
-Building the overlay for event dissemination is a three-faceted process.
-We address it by deploying three distinct gossiping protocols, depicted as three layers in \figref{fig:dissemination_layers}.
+\subsubsection{Peer Sampling Layer}
+\label{subsubsec:peer-sampling-layer}
+
+The Peer Sampling layer serves two primary functions.
+First, it ensures that the entire set of nodes remains connected in a single connected component.
+Second, it constitutes a continuous source of random peer samples, that is, fresh links to randomly chosen peers among all alive nodes in the network.
+The continuous link provision ensures the systematic replacement of old---and possibly obsolete---links by newly acquired, fresh links.
+This is key to peer sampling~\cite{PeerSampling}.
+
+To satisfy these requirements, we adopt SecureCyclon~\cite{SecureCyclon}, a secure variant of the Cyclon~\cite{Cyclon} peer sampling protocol.
+Cyclon is highly scalable and lightweight in network resources, as each node is only required to retain a small, fixed-sized view and to engage in small gossip exchanges once per cycle, irrespective of the network size.
+SecureCyclon enforces nodes to strictly follow the gossip-exchange rules.
+Specifically, it mandates that every node periodically generates only a limited number of fresh links, preventing malicious nodes from flooding the network with links to themselves and inhibiting the formation of hubs by adversaries.
+
+As shown in~\cite{Cyclon}, Cyclon exhibits extreme robustness to node failures, self-healing properties, and uniform random peer selection, which are consequently inherited by SecureCyclon too.
+These properties render SecureCyclon a highly suitable substrate layer for our protocol, offering a reliable groundwork for the construction of the other two layers.
+
+The Peer Sampling layer provides the random peer samples to the Navigation layer directly above it.
+
+\subsubsection{Discovery Layer}
+\label{ subsubsec:discovery-layer}
+
+The Discovery layer helps nodes navigate through the overlay to reach subscribers of the same topic in a timely manner.
+In our model, a new node may join by contacting any arbitrary node of any topic.
+Subsequently, it should be able to quickly and reliably discover other subscribers of the topic(s) it wishes to subscribe to.
+The same applies to established subscribers wishing to join additional topics.
+Rather than relying purely on random encounters, which could take unpredictably long, the Discovery layer provides structured links that progressively guide nodes towards their target topics.
+
+We utilize the fact that in the Cardano Pub/Sub System all topics are registered on-chain and, thus, are globally known.
+This allows us to define a global cyclic ordering of the $T$ topics, enumerated from $0$ to $T-1$.
+Each node maintains links to topics at distances $b^0, b^1, b^2, \ldots$, in both clockwise and anticlockwise directions, without exceeding $T/2$.
+Parameter $b$ is called the routing base, with a typical value of $2$.
+These links, referred to as finger links, allow nodes to navigate towards their target topic in a logarithmic number of hops.
+
+To establish and maintain these links, we employ Vicinity~\cite{Vicinity}, a fully decentralized gossiping protocol that lets nodes self-organize from an arbitrarily connected initial overlay into a structured topology.
+Each node periodically exchanges a few links with a neighbor, using a selection function to improve its view.
+For each finger topic, the function retains the $c$ nodes that are subscribers of topics as close to it as possible, ideally of the topic itself.
+Among nodes of the same topic, the selection function favors fresher links over older ones.
+Through successive gossip exchanges, nodes progressively establish and refresh links to their finger topics.
+
+The Discovery layer provides the Dissemination layer directly above it with links to other subscribers of the same topic, facilitating the construction of the event-dissemination overlay.
 
 \subsubsection{Dissemination Layer}
 
@@ -69,21 +107,86 @@ When a node receives a message from one of its two ring links, it forwards it to
 When a node receives a message through its random link, it forwards it along both ring links.
 This uses a very low   fanout of two, while still achieving fast dissemination in a logarithmic number of steps and providing a high degree of resilience to failures, as shown in~\cite{HybridDissemination}.
 
+To establish and maintain this topology, we once again employ the Vicinity protocol, but with a modified selection function.
+While the random links are provided directly by the Navigation layer, the Dissemination layer is responsible for establishing and maintaining the ring links.
+Each node gradually refines its view by acquiring nodes with the closest lower and higher IDs, in modulo arithmetic to preserve continuity.
+During gossip, nodes also consider random same-topic neighbors provided by the Navigation layer, increasing the likelihood of acquiring closer neighbors.
+This process ultimately results in a ring structure where all same-topic nodes are ordered according to their IDs.
+
 %In the face of failures, the ring structure may be broken into a number of disconnected components.
 %Intuitively, the use of random links delivers a message to each component with very high probability, while the use of ring links guarantees that a message will traverse all nodes of a component, up to the very last one.
 
-\subsection{Peer Sampling Layer}
-\label{subsec:peer-sampling-layer}
+\begin{figure*}[!t]
+    \centering
+    \footnotesize
 
-The Peer Sampling layer serves two primary functions.
-First, it ensures that the entire set of nodes remains connected in a single connected component.
-Second, it constitutes a continuous source of random peer samples, that is, fresh links to randomly chosen peers among all alive nodes in the network.
-The continuous link provision ensures the systematic replacement of old---and possibly obsolete---links by newly acquired, fresh links.
-This is key to peer sampling~\cite{PeerSampling}.
+    \begin{minipage}[t]{0.49\textwidth}
+        \vspace{0pt}
+        \textbf{(a) Topic Registry}
+        \vspace{2pt}
 
-To satisfy these requirements, we adopt SecureCyclon~\cite{SecureCyclon}, a secure variant of the Cyclon~\cite{Cyclon} peer sampling protocol.
-Cyclon is highly scalable and lightweight in network resources, as each node is only required to retain a small, fixed-sized view and to engage in small gossip exchanges once per cycle, irrespective of the network size.
-SecureCyclon enforces nodes to strictly follow the gossip-exchange rules.
-Specifically, it mandates that every node periodically generates only a limited number of fresh links, preventing malicious nodes from flooding the network with links to themselves and inhibiting the formation of hubs by adversaries.
+        \begin{algorithmic}[1]
+            \If{$action = \textsc{MintTopic}$}
+                \State $id \gets \mathrm{SHA256}(txId \parallel outputIndex)$
+                \State \textbf{require} creation UTxO is consumed
+                \State \textbf{require} exactly one token with name $id$ is minted
+                \State \textbf{require} token is sent to the registry script
+                \State \textbf{require} valid topic state with $topicId = id$
+            \Else
+                \State $current \gets$ spent topic state
+                \State $next \gets$ continuing output datum
+                \State \textbf{require} current topic is active
+                \State \textbf{require} signer is authorized for $action$
+                \State \textbf{require} $next.topicId = current.topicId$
+                \State \textbf{require} valid next topic state
+                \State \textbf{require} input/output values are equal
+                \State \textbf{require} transition matches $action$
+                \State \textbf{require} deletion is irreversible
+            \EndIf
+        \end{algorithmic}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.49\textwidth}
+        \vspace{0pt}
+        \textbf{(b) Replication Registry}
+        \vspace{2pt}
 
-As shown in~\cite{Cyclon}, Cyclon exhibits extreme robustness to node failures, self-healing properties, and uniform random peer selection, which are consequently inherited by SecureCyclon too. These properties render SecureCyclon a highly suitable substrate layer for our protocol, offering a reliable groundwork for the construction of the other two layers.
+        \begin{algorithmic}[1]
+            \State $current \gets$ spent server state
+            \State $next \gets$ continuing output datum
+            \State \textbf{require} current server is active
+            \State \textbf{require} operator signature is present
+            \State \textbf{require} $next.serverId = current.serverId$
+            \State \textbf{require} $next.operator = current.operator$
+            \State \textbf{require} valid port and commitment period
+            \State \textbf{require} input/output values are equal
+            \If{$action = \textsc{UpdateServer}$}
+                \State \textbf{require} only endpoint and
+                \Statex \hspace{2.3em} commitment fields are updated
+                \State \textbf{require} server remains active
+            \ElsIf{$action = \textsc{UnregisterServer}$}
+            \State \textbf{require} only $active$ changes to false
+            \EndIf
+        \end{algorithmic}
+    \end{minipage}
+
+    \caption{Cardano smart contracts compute state transitions off-chain, while on-chain validators enforce the rules governing valid transactions.}
+    \label{fig:registry-validators}
+\end{figure*}
+
+\FloatBarrier
+
+\subsubsection{Topic Registry and Administration}
+
+Central to our architecture is a global directory of topics, referred to as the Topic Registry, storing topic identifiers and their respective configurations.
+Each topic is represented by a state UTxO, indexed by a unique 256-bit identifier, known as the \emph{topicId}.
+When a node seeks to initialize a topic, it submits a transaction that includes the topic name and metadata specifying its properties.
+These include the topic's owners, administrators, authorized publishers, replication factor, and retention period.
+The latter two are defined on a per-topic basis, determining how many replicas of each event should be maintained and for how long they remain available.
+
+The owner can later modify the metadata to adjust the communication parameters as the topic evolves, or delegate administrative responsibilities to other nodes.
+The registry performs authorization by confirming that the transaction's signatories belong to the appropriate list.
+A topic's publishers property can either be empty, allowing any node to publish (\emph{open topic}), or list authorized publishers (\emph{moderated topic}).
+Our design does not impose any constraints on subscribers, allowing any node to subscribe to any available topic.
+These rules are enforced by an Aiken minting policy and spending validator, which guarantee unique topic identifiers, authorized state transitions, and irreversible topic deletion.
+Their main validation rules are summarized in Figure~\ref{fig:registry-validators}(a).
