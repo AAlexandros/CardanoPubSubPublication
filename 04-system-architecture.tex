@@ -190,3 +190,13 @@ A topic's publishers property can either be empty, allowing any node to publish 
 Our design does not impose any constraints on subscribers, allowing any node to subscribe to any available topic.
 These rules are enforced by an Aiken minting policy and spending validator, which guarantee unique topic identifiers, authorized state transitions, and irreversible topic deletion.
 Their main validation rules are summarized in Figure~\ref{fig:registry-validators}(a).
+
+
+\subsection{Replication Server Network}
+\label{subsec:replication-server-network}
+
+\paragraph{Incentivization and Penalization}
+
+The design of an incentivization mechanism constitutes a separate line of research and falls outside the scope of this work.
+We envision Stake Pool Operators (SPOs) as potential providers of the replication service, leveraging their existing infrastructure and experience in maintaining reliable, continuously available nodes within Cardano's incentive-driven ecosystem~\cite{Cardano-SPOs}.
+For further reading on mechanisms for verifying storage commitments and data availability, we refer the reader to the literature on \emph{Proof of Replication}~\cite{PoReplication, PoReplicationScaling} and \emph{Proof of Retrieval}~\cite{PoRTheoryAndPractice, PoRCompact, PoRLargeFiles}.
