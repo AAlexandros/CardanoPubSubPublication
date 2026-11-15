@@ -1,28 +1,44 @@
 \section{Introduction}
 \label{sec:introduction}
 
-
 Group communication finds many use cases in blockchains, many of which play a vital role for the seamless
 operation of their ecosystems.
-Governance platforms \cite{CIP-1694, DAO-White-Paper, eGov-DAO} broadcast voting-status updates, and discussions to 
-Cardano Delegated Representatives (DReps), stakeholders and governance applications.
+Governance platforms~\cite{CIP-1694, DAO-White-Paper, eGov-DAO} broadcast voting-status updates, and discussions to 
+Delegated Representatives (DReps), stakeholders and governance applications.
 Stake pool operators need to inform their nodes-clients, about the results of their stake delegation,
 by disseminating operational alerts, telemetry summaries or service-health information.
-Decentralized Finance (DeFi) \cite{Cardano-DeFi} applications need to disseminate market information, such as trading intentions,
+Decentralized Finance (DeFi)~\cite{Cardano-DeFi} applications need to disseminate market information, such as trading intentions,
 price feeds, and liquidity alerts, through off-chain communication to support more educated trading decisions.
 
-When building a communication mean that suffixes the requirements of the aforementioned use cases, for a selfish environment,
-a specific set of design decisions should be taken into consideration.
+All the aforementioned use cases require a dedicated communication channel with several common characteristics.
 
-\begin{enumerate}[itemsep=6pt]
-    \item \emph{Event Persistence: } 
-    \item second contribution
-\end{enumerate}
+First and foremost, to accommodate the decentralized nature of blockchain ecosystems, the communication system should itself be decentralized.
+In contrast to centralized communication architectures, trust should not depend on a single trusted entity.
+Receivers should be able to independently verify that a received event originates from an authorized publisher.
+To this end, the blockchain can serve as a shared registry of topic configurations and authorized publishers, while digital signatures allow receivers to verify the authenticity of received events.
+
+Secondly, the aforementioned use cases typically involve one or a few sources disseminating events to multiple recipients.
+In addition, the information being disseminated generally concerns publicly available or publicly shareable data about the ecosystem or the blockchain itself.
+Consequently, our design focuses on public communication channels, without imposing confidentiality requirements.
+
+Lastly, events should be disseminated promptly, while subscribers should be able to retrieve events missed during unexpected downtime.
+Such events may be crucial for subscribers when making decisions.
+Therefore, the system should support the recovery of missed events within a configurable retention period.
+
+Secondly, the use-cases have in common that they require a single, or a few entities, sending an event to multiple.
+In addition to that, the data sent, comes from observing the ecosystem, or the blockchain itself, thus there is no sensitive data.
+
+Lastly, events should be disseminated promptly, and the nodes should never miss an event because of unexpected downtime, as they could be a crucial factor for a node to determine its decisions.
+
+Taking the aforementioned requirements into consideration, we introduce \system, a decentralized Peer-to-Peer (P2P) publish/subscribe system that leverages the blockchain for topic administration and publisher authorization.
+Event dissemination is carried out by the participating peers, while a separate set of dedicated replication servers, assumed to be operated by Stake Pool Operators (SPOs), provides persistent event storage and enables the recovery of missed events.
+Our design and implementation focus on the Cardano ecosystem, thus, the terminology in the rest of the paper will be of the context of Cardano.
 
 The contributions of this paper are twofold:
 \begin{enumerate}[itemsep=6pt]
-    \item first contribution
-    \item second contribution
+    \item We present the design and architecture of \system, detailing the key design decisions and explaining how they address the identified system requirements.
+    \item We evaluate the proposed design through simulations, investigating its behavior and performance under different network conditions
+    \item We implement an end-to-end client of \system and deploy it in a testbed to evaluate its performance under realistic workloads and failure scenarios.
 \end{enumerate}
 
 The rest of this paper is structured as follows.

@@ -1,0 +1,28 @@
+\section{Related Work}
+\label{sec:related-work}
+
+The diversity of existing pub/sub approaches illustrates that there is no one-size-fits-all solution when it comes to designing and implementing a pub/sub system \cite{FacesOfPubSub, XlPubSub}.
+Existing approaches differ in their underlying architecture, the mechanisms employed for event dissemination, and the way they address scalability, reliability, and fault tolerance. 
+
+\textbf{Application-Level Multicast (ALM)} approaches primarily focus on creating a separate, highly efficient network overlay for each topic. Scribe~\cite{Scribe} and Bayeux~\cite{Bayeux} construct multicast trees on top of Distributed Hash Tables (DHTs), while Zigzag~\cite{ZigZag} and NICE~\cite{Nice} employ hierarchical clustering. 
+Although these approaches facilitate efficient message dissemination, they introduce additional overhead for the construction and maintenance of multicast trees.
+Furthermore, tree-based structures introduce potential single points of failure, while message dissemination may involve nodes that are not subscribers of the corresponding topic.
+
+\textbf{Distributed pub/sub} approaches prioritize scalability as the number of nodes and topics grows. 
+Gossipsub~\cite{GossipSub} maintains a mesh network for each topic, combining push-based dissemination with gossip-based recovery of missed messages.
+It additionally employs a peer-scoring mechanism to evaluate neighboring nodes and improve resilience against malicious behavior.
+
+Poldercast~\cite{Poldercast} combines topic-specific ring topologies with additional random links to achieve efficient and reliable dissemination. 
+Its architecture employs Cyclon for random peer sampling and Vicinity for selecting neighbors based on common subscriptions, allowing connections to be reused across multiple topics. 
+Our approach follows a similar layered architecture, but introduces a topic-oriented navigation mechanism to facilitate subscriber discovery across topics. 
+Furthermore, our framework incorporates secure peer sampling, blockchain-based topic administration, and a separate persistence layer for reliable event retrieval.
+
+Spidercast~\cite{Spidercast} similarly focuses on constructing topic-connected overlays, employing two neighbor-selection strategies: favoring peers with the largest number of common subscriptions, and maintaining random links to peers sharing at least one topic. 
+This combination aims to preserve topic connectivity and small dissemination paths while keeping the number of maintained connections moderate.
+
+Tera~\cite{Tera}, on the other hand, focuses on locating subscribers of specific topics rather than optimizing dissemination within a topic. 
+It employs a distributed lookup mechanism based on random peer sampling and random walks, allowing nodes to discover access points for topics without prior knowledge of their participants.
+
+\textbf{Centrally managed pub/sub} approaches rely on dedicated servers or brokers for message dissemination. 
+Dynamoth~\cite{Dynamoth} employs dynamic resource allocation and load-balancing strategies to accommodate changes in communication workloads, while Dynatops~\cite{Dynatops} utilizes a broker-based architecture and centralized reconfiguration to minimize dissemination costs. 
+Unlike distributed approaches, these approaches depend on designated infrastructure, requiring additional server resources as the communication workload increases.

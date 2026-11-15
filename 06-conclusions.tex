@@ -1,0 +1,8 @@
+\section{Conclusion}
+\label{sec:conclusions}
+
+This paper has presented the design and implementation of \system, a decentralized publish/subscribe system tailored for the Cardano ecosystem. 
+The system is structured around three main components, each playing a critical role in ensuring efficient, reliable, and scalable communication between publishers and subscribers. 
+At its core, a multi-layer Peer-to-Peer overlay enables nodes to discover peers, navigate across topics, and efficiently disseminate events through a Harary-like graph augmented with random links. 
+To address resilience, a persistence component supported by dedicated replication servers enables subscribers to retrieve events missed during periods of disconnection, within a configurable retention period. 
+Finally, the system leverages the Cardano blockchain to transparently manage topic configurations and publishing permissions, allowing nodes to independently verify the authenticity and authorization of received events. 
