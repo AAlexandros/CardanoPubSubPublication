@@ -14,16 +14,8 @@ All the aforementioned use cases require a dedicated communication channel with 
 
 First and foremost, to accommodate the decentralized nature of blockchain ecosystems, the communication system should itself be decentralized.
 In contrast to centralized communication architectures, trust should not depend on a single trusted entity.
-Receivers should be able to independently verify that a received event originates from an authorized publisher.
-To this end, the blockchain can serve as a shared registry of topic configurations and authorized publishers, while digital signatures allow receivers to verify the authenticity of received events.
-
-Secondly, the aforementioned use cases typically involve one or a few sources disseminating events to multiple recipients.
-In addition, the information being disseminated generally concerns publicly available or publicly shareable data about the ecosystem or the blockchain itself.
-Consequently, our design focuses on public communication channels, without imposing confidentiality requirements.
-
-Lastly, events should be disseminated promptly, while subscribers should be able to retrieve events missed during unexpected downtime.
-Such events may be crucial for subscribers when making decisions.
-Therefore, the system should support the recovery of missed events within a configurable retention period.
+Receivers should be able to independently verify that a received event originates from an authorized sender.
+To this end, the blockchain can serve as a shared registry of topic configurations and authorized senders, while digital signatures allow receivers to verify the authenticity of received events.
 
 Secondly, the use-cases have in common that they require a single, or a few entities, sending an event to multiple.
 In addition to that, the data sent, comes from observing the ecosystem, or the blockchain itself, thus there is no sensitive data.
@@ -34,15 +26,15 @@ Taking the aforementioned requirements into consideration, we introduce \system,
 Event dissemination is carried out by the participating peers, while a separate set of dedicated replication servers, assumed to be operated by Stake Pool Operators (SPOs), provides persistent event storage and enables the recovery of missed events.
 Our design and implementation focus on the Cardano ecosystem, thus, the terminology in the rest of the paper will be of the context of Cardano.
 
-The contributions of this paper are twofold:
+The contributions of this paper are threefold:
 \begin{enumerate}[itemsep=6pt]
     \item We present the design and architecture of \system, detailing the key design decisions and explaining how they address the identified system requirements.
-    \item We evaluate the proposed design through simulations, investigating its behavior and performance under different network conditions
-    \item We implement an end-to-end client of \system and deploy it in a testbed to evaluate its performance under realistic workloads and failure scenarios.
+    \item We evaluate the proposed design through simulations, investigating its behavior and performance under different configurations.
+    \item We implement an end-to-end client of \system, and and deploy it in a testbed to evaluate its performance under realistic workloads and failure scenarios.
 \end{enumerate}
 
 The rest of this paper is structured as follows.
-\secref{sec:background} lays down the necessary background.
-\secref{sec:system-architecture} presents our system architecture.
-An evaluation of our system is provided in \secref{sec:evaluation}.
-\secref{sec:related-work} surveys the related work, and \secref{sec:conclusions} concludes our work.
+\secref{sec:system-model} introduces the system model and the assumptions underlying our design.
+\secref{sec:system-architecture} presents the architecture of \system and its components.
+\secref{sec:evaluation} evaluates the system's performance through simulations and prototype-based experiments.
+\secref{sec:related-work} surveys related work, and \secref{sec:conclusions} concludes the paper.
