@@ -19,7 +19,7 @@ all:
 paper:
 	make $(PAPER).pdf
 
-%.pdf : %.tex
+%.pdf : %.tex $(TEX) $(BIB)
 	$(LATEX) $<
 	$(BIBTEX) $(subst .tex,,$<)
 	$(LATEX) $<

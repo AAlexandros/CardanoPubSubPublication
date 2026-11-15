@@ -195,8 +195,83 @@ Their main validation rules are summarized in Figure~\ref{fig:registry-validator
 \subsection{Replication Server Network}
 \label{subsec:replication-server-network}
 
-\paragraph{Incentivization and Penalization}
+The dissemination mechanism described previously ensures efficient message delivery to all alive subscribers of the respective topic.
+To accommodate subscribers who are offline during event dissemination, the system provides a persistence layer, storing published events and ensuring they remain available for a certain duration, known as the \emph{retention period}. 
+Due to the potentially huge number of published events, subscribers should be able to efficiently locate and retrieve the specific events they have missed.
+To this end, we employ a Distributed Hash Table (DHT), maintained by a network of replication servers that collectively provide a storage service.
+Each event is stored on a number of servers determined by its key and the topic's \emph{replication factor}.
 
 The design of an incentivization mechanism constitutes a separate line of research and falls outside the scope of this work.
 We envision Stake Pool Operators (SPOs) as potential providers of the replication service, leveraging their existing infrastructure and experience in maintaining reliable, continuously available nodes within Cardano's incentive-driven ecosystem~\cite{Cardano-SPOs}.
 For further reading on mechanisms for verifying storage commitments and data availability, we refer the reader to the literature on \emph{Proof of Replication}~\cite{PoReplication, PoReplicationScaling} and \emph{Proof of Retrieval}~\cite{PoRTheoryAndPractice, PoRCompact, PoRLargeFiles}.
+
+\subsubsection{Key-Value Store}
+
+We base our key-value storage overlay structure on two main observations.
+First, the number of replication servers is anticipated to be relatively limited, likely in the range of hundreds to thousands.
+Second, these servers are registered on-chain, providing global knowledge of membership, which comprises a relatively small and stable set of replication servers.
+We take into account these observations to adopt one-hop Distributed Hash Table (DHT), which has the following advantages:
+\begin{itemize}
+  \item \textbf{Simplified Overlay Management}: Since every node knows all other nodes, handling joins, departures, and failure recovery is greatly simplified, removing the need for a complex routing infrastructure.
+  \item \textbf{Increased Performance}: Nodes can access the target responsible for any key in a single hop, leading to significantly faster lookup times and reduced network overhead.
+  \item \textbf{Reduced Routing Overhead}: Nodes responsible for storing data are not burdened with routing overhead, allowing them to focus solely on their storage and retrieval duties.
+  \item \textbf{Enhanced Fault Tolerance}: Faults can be detected quickly, allowing for faster replication of data on alternative nodes, ensuring higher availability and reliability of stored events.
+\end{itemize}
+
+This design bares strong similarities to Amazon's \emph{Dynamo}~\cite{Dynamo} key-value store, a production-level system that powers hundreds of Amazon services since 2007, and which has lent its features to Amazon's \emph{DynamoDB}~\cite{DynamoDB}, a distributed NoSQL database.
+
+To ensure effective event replication, we enable the configuration of the replication factor $R$ on a per-topic basis.
+Replication servers acquire unique IDs in a circular 256-bit identifier space, in which event keys are also mapped.
+When a node publishes an event $e$ on topic $t$, it signs the event, computes its key $k$, and hands the $\langle k,e \rangle$ tuple to any arbitrary replication server.
+The event is then replicated to the $R_t$ servers with IDs arithmetically closest to $k$, considering the shortest cyclic distance.
+Similarly, when a lookup request is made, any replication server can identify and directly contact a responsible server to retrieve the corresponding event.
+
+\subsubsection{Maintenance}
+
+To maintain an active set of nodes replicating each event, the following strategy is employed. 
+Assume a replication server $p$ and let $E_p$ be the set of events currently stored by $p$. 
+Let $S_e$ be the set of replication servers responsible for storing a copy of event $e$. 
+Node $p$ computes its \emph{monitoring set} $M_p$ as the union of servers responsible for any of its stored events, that is, $M_p = \bigcup_{e \in E_p} S_e$. 
+These are the servers whose health $p$ should periodically monitor.
+
+If a server $q$ is found to be unavailable, $p$ identifies the affected events in $E_p$, computes the new set of responsible servers in the absence of $q$, and informs them of its unavailability. 
+Each newly responsible server then determines which events it should take over and fetches them directly from surviving replicas. 
+Similarly, changes in membership or replication factors trigger replica migration, with obsolete copies released only after successful replication is confirmed.
+
+This recovery mechanism is triggered only when a server is confirmed to be unavailable after several consecutive failed health checks. 
+Specifically, we employ three consecutive failed probes, with a timeout of five seconds per attempt, balancing responsiveness against false positives caused by temporary network issues.
+
+\subsubsection{Indexing Scheme}
+\label{sec:indexing-scheme}
+
+Having an efficient and robust key-value store is the cornerstone of a well-functioning persistence layer. 
+However, an educated choice of which information should be indexed by which key is no less crucial for its efficient and decentralized operation.
+More specifically, the indexing scheme should (i) balance the storage and lookup load across replication servers, and (ii) allow subscribers to construct the keys of missed events on their own, without depending on any central component.
+
+Indexing all events of a topic under the same key would impose a disproportionately high load on a small set of replication servers.
+On the other hand, indexing each event by an arbitrary unique key would require a centralized registry listing all published event keys.
+To satisfy both requirements, we propose events to be indexed by the following key scheme:
+
+\[
+    k = hash\big(
+        \langle topicId \rangle \parallel
+        \langle publisherKeyId \rangle \parallel
+        \langle sequenceNr \rangle
+    \big)
+\]
+
+where $\parallel$ denotes concatenation. 
+The sequence number is a per-topic, per-publisher counter, starting at zero and increasing by one for each newly published event.
+This scheme indexes each event independently, distributing events across replication servers, while allowing subscribers to construct the keys of missed events on their own.
+
+There are still two challenges: subscribers may be unaware of new publishers that started publishing while they were offline, and they may have to try a large number of possible event keys.
+To alleviate these problems, we maintain a lightweight registry per topic, logging, for each publisher, only the sequence number of its last published event and a corresponding timestamp. 
+This log is indexed by the topic's hash, making it readily addressable by subscribers. 
+Its size depends on the number of publishers rather than the potentially ever-growing number of published events, rendering this solution scalable.
+
+When a subscriber recovers from a period of being offline, it retrieves the publisher log and compares the latest sequence numbers with its locally maintained progress.
+It can then construct the corresponding keys and issue requests to the key-value store to retrieve the missed events. 
+These requests can be shipped concurrently, while different replicas can be contacted to further distribute the lookup load.
+
+Our approach bares similarities to Cassandra's~\cite{Cassandra} composite partition keys, combining multiple attributes into a single key, whose hash determines the placement of each event across replication servers.
+We complement this scheme with a lightweight per-topic publisher log, allowing subscribers to independently identify and retrieve missed events without maintaining a centralized index of individual publications.

@@ -156,6 +156,17 @@
 	publisher={IEEE}
 }
 
+@article{Cassandra,
+  title={Cassandra: a decentralized structured storage system},
+  author={Lakshman, Avinash and Malik, Prashant},
+  journal={ACM SIGOPS operating systems review},
+  volume={44},
+  number={2},
+  pages={35--40},
+  year={2010},
+  publisher={ACM, New York, NY, USA}
+}
+
 @inproceedings{Bayeux,
 	title={Bayeux: An architecture for scalable and fault-tolerant wide-area data dissemination},
 	author={Zhuang, Shelley Q and Zhao, Ben Y and Joseph, Anthony D and Katz, Randy H and Kubiatowicz, John D},
@@ -212,6 +223,43 @@
 	year={2012},
 	publisher={Springer Berlin Heidelberg},
 	pages={1--13},
+}
+
+@inproceedings{Dynamo,
+author = {DeCandia, Giuseppe and Hastorun, Deniz and Jampani, Madan and Kakulapati, Gunavardhan and Lakshman, Avinash and Pilchin, Alex and Sivasubramanian, Swaminathan and Vosshall, Peter and Vogels, Werner},
+title = {Dynamo: {A}mazon's {H}ighly {A}vailable {K}ey-{V}alue {S}tore},
+year = {2007},
+isbn = {9781595935915},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/1294261.1294281},
+doi = {10.1145/1294261.1294281},
+abstract = {Reliability at massive scale is one of the biggest challenges we face at Amazon.com, one of the largest e-commerce operations in the world; even the slightest outage has significant financial consequences and impacts customer trust. The Amazon.com platform, which provides services for many web sites worldwide, is implemented on top of an infrastructure of tens of thousands of servers and network components located in many datacenters around the world. At this scale, small and large components fail continuously and the way persistent state is managed in the face of these failures drives the reliability and scalability of the software systems.This paper presents the design and implementation of Dynamo, a highly available key-value storage system that some of Amazon's core services use to provide an "always-on" experience. To achieve this level of availability, Dynamo sacrifices consistency under certain failure scenarios. It makes extensive use of object versioning and application-assisted conflict resolution in a manner that provides a novel interface for developers to use.},
+booktitle = {Proceedings of Twenty-First ACM SIGOPS Symposium on Operating Systems Principles},
+pages = {205–220},
+numpages = {16},
+keywords = {scalability, reliability, performance},
+location = {Stevenson, Washington, USA},
+series = {SOSP '07}
+}
+
+@inproceedings{DynamoDB,
+  added-at = {2018-11-06T00:00:00.000+0100},
+  author = {Sivasubramanian, Swaminathan},
+  biburl = {https://www.bibsonomy.org/bibtex/211df2cdf5e7fde9c09c4d76a58c55188/dblp},
+  booktitle = {SIGMOD Conference},
+  editor = {Candan, K. Selçuk and Chen, Yi and Snodgrass, Richard T. and Gravano, Luis and Fuxman, Ariel},
+  ee = {https://doi.org/10.1145/2213836.2213945},
+  interhash = {80b36aa4522e27dc1f2b257eb60e7757},
+  intrahash = {11df2cdf5e7fde9c09c4d76a58c55188},
+  isbn = {978-1-4503-1247-9},
+  keywords = {dblp},
+  pages = {729-730},
+  publisher = {ACM},
+  timestamp = {2018-11-07T14:50:12.000+0100},
+  title = {{A}mazon {D}ynamo{DB}: {A} {S}eamlessly {S}calable non-{R}elational {D}atabase {S}ervice.},
+  url = {http://dblp.uni-trier.de/db/conf/sigmod/sigmod2012.html#Sivasubramanian12},
+  year = 2012
 }
 
 % 
