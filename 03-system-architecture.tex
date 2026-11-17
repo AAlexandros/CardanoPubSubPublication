@@ -5,11 +5,11 @@ On a high level, \system can be viewed as a three component system:
 
 \begin{itemize}
     \item \textbf{A network of pub/sub nodes, }clustered into efficient overlays, one per topic, for topic-based event dissemination.
-    This component is responsible for topic discovery and fast event dissemination, satisfying the \emph{dissemination speed} and \emph{scalability} requirements.
+    This component is responsible for subscriber discovery and fast event dissemination, satisfying the \emph{dissemination speed} and \emph{scalability} requirements.
     \item \textbf{A network of replication servers, }forming a strongly-connected overlay to facilitate rapid event retrieval and
     prompt replica maintenance.
     This component is responsible for \emph{event persistence}, and \emph{reliability} allowing nodes to retrieve missed events within their retention period.
-    \item \textbf{Two Cardano blockchain, }providing a decentralized mechanism for administration and access control through
+    \item \textbf{Two Cardano blockchain smart contracts, }providing a decentralized mechanism for administration and access control through
     two smart contracts, implemented using Aiken validators.
     The first serves as a global Topic Registry, maintaining topic configurations and enforcing administrative permissions.
     The second manages the registration and membership of replication servers.
@@ -35,7 +35,7 @@ Thus, the \emph{scalability} requirement is satisfied.
 \end{figure}
 
 Building the event dissemination overlay is a three-faceted process.
-We address it by deploying three distinct gossiping protocols, organized into three layers: Peer Sampling, Navigation, and Dissemination, depicted as three layers in \figref{fig:dissemination_layers}.
+We address it by deploying three distinct gossiping protocols, organized into three layers: Peer Sampling, Discovery, and Dissemination, depicted as three layers in \figref{fig:dissemination_layers}.
 Each node maintains, separately per layer, a list of links to other nodes, collectively known as its view of the network.
 The three layers operate in a cooperative manner, with lower layers providing links to higher layers to improve their views.
 
@@ -56,7 +56,7 @@ Specifically, it mandates that every node periodically generates only a limited 
 As shown in~\cite{Cyclon}, Cyclon exhibits extreme robustness to node failures, self-healing properties, and uniform random peer selection, which are consequently inherited by SecureCyclon too.
 These properties render SecureCyclon a highly suitable substrate layer for our protocol, offering a reliable groundwork for the construction of the other two layers.
 
-The Peer Sampling layer provides the random peer samples to the Navigation layer directly above it.
+The Peer Sampling layer provides the random peer samples to the Discovery layer directly above it.
 
 \subsubsection{Discovery Layer}
 \label{ subsubsec:discovery-layer}
@@ -67,7 +67,7 @@ Subsequently, it should be able to quickly and reliably discover other subscribe
 The same applies to established subscribers wishing to join additional topics.
 Rather than relying purely on random encounters, which could take unpredictably long, the Discovery layer provides structured links that progressively guide nodes towards their target topics.
 
-We utilize the fact that in the Cardano Pub/Sub System all topics are registered on-chain and, thus, are globally known.
+We utilize the fact that in the \system all topics are registered on-chain and, thus, are globally known.
 This allows us to define a global cyclic ordering of the $T$ topics, enumerated from $0$ to $T-1$.
 Each node maintains links to topics at distances $b^0, b^1, b^2, \ldots$, in both clockwise and anticlockwise directions, without exceeding $T/2$.
 Parameter $b$ is called the routing base, with a typical value of $2$.
