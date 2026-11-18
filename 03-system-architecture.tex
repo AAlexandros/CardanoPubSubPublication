@@ -260,10 +260,9 @@ To satisfy both requirements, we propose events to be indexed by the following k
 
 where $\parallel$ denotes concatenation. 
 The sequence number is a per-topic, per-publisher counter, starting at zero and increasing by one for each newly published event.
-This scheme indexes each event independently, distributing events across replication servers, while allowing subscribers to construct the keys of missed events on their own.
 
 There are still two challenges: subscribers may be unaware of new publishers that started publishing while they were offline, and they may have to try a large number of possible event keys.
-To alleviate these problems, we maintain a lightweight registry per topic, logging, for each publisher, only the sequence number of its last published event and a corresponding timestamp. 
+To alleviate these problems, we maintain a lightweight per-topic publisher catalog, logging, for each publisher, only the sequence number of its last published event and a corresponding timestamp. 
 This log is indexed by the topic's hash, making it readily addressable by subscribers. 
 Its size depends on the number of publishers rather than the potentially ever-growing number of published events, rendering this solution scalable.
 
