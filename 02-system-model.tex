@@ -7,8 +7,7 @@ The key pair is also used to sign events, allowing receivers to verify their aut
 Cardano operations, including topic administration, are authorized separately by Ed25519 Cardano payment keys. 
 
 We design and implement our pub/sub architecture following the principles in~\cite{FacesOfPubSub}.
-Specifically, we make sure our infrastructure provides mechanisms that facilitate event exchange between the 
-publishers and subscribers, enabling decoupling along the three dimensions:
+Specifically, our architecture facilitates event exchange between publishers and subscribers, enabling decoupling along three dimensions:
 
 \begin{itemize}
     \item \textbf{Time decoupling: }Publishers and subscribers do not need to be online simultaneously.

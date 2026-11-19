@@ -1,7 +1,23 @@
+\begin{figure*}[!t]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/system-architecture}
+        \caption{High-level system architecture.}
+        \label{fig:system_architecture}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/pub-sub-layers}
+        \caption{Three-layer protocol. Each layer constitutes a distinct gossiping protocol, maintaining its own list of neighbors and gossiping with them. Lower layers help higher layers by equipping them with links from their own neighbors.}
+        \label{fig:dissemination_layers}
+    \end{minipage}
+\end{figure*}
+
 \section{System Architecture}
 \label{sec:system-architecture}
 
-On a high level, \system can be viewed as a three component system:
+On a high level, \system can be viewed as a three component system, depicted in \figref{fig:system_architecture}:
 
 \begin{itemize}
     \item \textbf{A network of pub/sub nodes, }clustered into efficient overlays, one per topic, for topic-based event dissemination.
@@ -18,21 +34,10 @@ On a high level, \system can be viewed as a three component system:
 The event-dissemination network creation protocol is designed such that, regardless of the number of nodes, whether thousands or hundreds of thousands,
 the same constant number of communications is required in order to establish topic communication.
 Topic discovery requires only a simple lookup operation in the Topic Registry.
-Thus, the \emph{scalability} requirement is satisfied.
+Thus, the \emph{scalability} requirement is satisfied, as illustrated in \figref{fig:system_architecture}.
 
 \subsection{Publisher/Subscriber Network}
 \label{subsec:publisher/subscriber-network}
-
-\begin{figure}
-    \centering
-    \hspace*{-0.5cm}
-    \begin{minipage}{0.50\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{figs/layers}
-        \caption{Three-layer protocol. Each layer constitutes a distinct gossiping protocol, maintaining its own list of neighbors and gossiping with them. Lower layers help higher layers by equipping them with links from their own neighbors.}
-        \label{fig:dissemination_layers}
-    \end{minipage}\hfill
-\end{figure}
 
 Building the event dissemination overlay is a three-faceted process.
 We address it by deploying three distinct gossiping protocols, organized into three layers: Peer Sampling, Discovery, and Dissemination, depicted as three layers in \figref{fig:dissemination_layers}.
