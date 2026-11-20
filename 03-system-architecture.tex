@@ -3,7 +3,7 @@
     \begin{minipage}{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{figs/system-architecture}
-        \caption{High-level system architecture.}
+        \caption{\system() architecture, comprised of three components}
         \label{fig:system_architecture}
     \end{minipage}\hfill
     \begin{minipage}{0.48\textwidth}
@@ -17,16 +17,16 @@
 \section{System Architecture}
 \label{sec:system-architecture}
 
-On a high level, \system can be viewed as a three component system, depicted in \figref{fig:system_architecture}:
+On a high level, \system{} can be viewed as a three component system, illustrated in \figref{fig:system_architecture}:
 
 \begin{itemize}
     \item \textbf{A network of pub/sub nodes, }clustered into efficient overlays, one per topic, for topic-based event dissemination.
+    % The scope of this component includes the mechanism that allows each node to pick same-topic peers from the set of all nodes,
     This component is responsible for subscriber discovery and fast event dissemination, satisfying the \emph{dissemination speed} and \emph{scalability} requirements.
     \item \textbf{A network of replication servers, }forming a strongly-connected overlay to facilitate rapid event retrieval and
     prompt replica maintenance.
     This component is responsible for \emph{event persistence}, and \emph{reliability} allowing nodes to retrieve missed events within their retention period.
-    \item \textbf{Two Cardano blockchain smart contracts, }providing a decentralized mechanism for administration and access control through
-    two smart contracts, implemented using Aiken validators.
+    \item \textbf{Two Cardano blockchain smart contracts, }providing a decentralized mechanism for administration and access control, implemented using Aiken validators.
     The first serves as a global Topic Registry, maintaining topic configurations and enforcing administrative permissions.
     The second manages the registration and membership of replication servers.
 \end{itemize}
